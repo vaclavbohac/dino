@@ -7,13 +7,13 @@ module Dino
         it 'should raise if it does not receive a pin' do
           expect {
             Button.new(board: 'a board')
-          }.to raise_exception
+          }.to raise_exception /board and pin or pins are required for a component/
         end
 
         it 'should raise if it does not receive a board' do
           expect {
             Button.new(pin: 'a pin')
-          }.to raise_exception
+          }.to raise_exception /board and pin or pins are required for a component/
         end
 
         it 'should add itself to the board and start reading' do

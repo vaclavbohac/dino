@@ -9,19 +9,19 @@ module Dino
         it 'should raise if it does not receive a step pin' do
           expect {
             Stepper.new(board: board)
-          }.to raise_exception
+          }.to raise_exception /board and pin or pins are required for a component/
         end
 
         it 'should raise if it does not receive a direction pin' do
           expect {
             Stepper.new(board: board)
-          }.to raise_exception
+          }.to raise_exception /board and pin or pins are required for a component/
         end
 
         it 'should raise if it does not receive a board' do
           expect {
             Stepper.new(pins: {step: 12, direction: 13})
-          }.to raise_exception
+          }.to raise_exception /board and pin or pins are required for a component/
         end
 
         it 'should set the pins to out' do

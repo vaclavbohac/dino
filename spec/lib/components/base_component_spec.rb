@@ -25,13 +25,13 @@ module Dino
       it 'should require a pin or pins' do
         expect {
           BaseComponent.new(board: 'some board')
-        }.to raise_exception
+        }.to raise_exception /board and pin or pins are required for a component/
       end
 
       it 'should require a board' do
         expect {
           BaseComponent.new(pin: 'some pin')
-        }.to raise_exception
+        }.to raise_exception /board and pin or pins are required for a component/
       end
 
       context "when subclassed #after_initialize should be executed" do
