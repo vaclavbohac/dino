@@ -11,13 +11,13 @@ module Dino
         it 'should raise if it does not receive a pin' do
           expect {
             RgbLed.new(board: 'a board')
-          }.to raise_exception
+          }.to raise_exception /board and pin or pins are required for a component/
         end
 
         it 'should raise if it does not receive a board' do
           expect {
             RgbLed.new(pins: pins)
-          }.to raise_exception
+          }.to raise_exception /board and pin or pins are required for a component/
         end
 
         it 'should set the pin to out' do
