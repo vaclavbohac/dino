@@ -16,8 +16,7 @@ module Dino
       end
 
       it 'should observe the io' do
-        io_mock.should_receive(:add_observer).with(subject)
-        subject.send(:initialize, io_mock)
+        expect(io_mock).to have_received(:add_observer).with(subject)
       end
 
       it 'should initiate the handshake' do
