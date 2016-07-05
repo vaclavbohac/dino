@@ -19,29 +19,29 @@ module Dino
         end
 
         it 'should set the pin to out' do
-          board.should_receive(:set_pin_mode).with(13, :out, nil)
           Led.new(pin: 13, board: board)
+          expect(board).to have_received(:set_pin_mode).with(13, :out, nil)
         end
 
         it 'should set the pin to low' do
-          board.should_receive(:digital_write).with(13, Board::LOW)
           Led.new(pin: 13, board: board)
+          expect(board).to have_received(:digital_write).with(13, Board::LOW)
         end
       end
 
       describe '#on' do
         it 'should send a high to the board with the pin' do
           @led = Led.new(pin: 13, board: board)
-          board.should_receive(:digital_write).with(13, Board::HIGH)
           @led.on
+          expect(board).to have_received(:digital_write).with(13, Board::HIGH)
         end
       end
 
       describe '#off' do
         it 'should send a high to the board with the pin' do
           @led = Led.new(pin: 13, board: board)
-          board.should_receive(:digital_write).with(13, Board::LOW)
           @led.off
+          expect(board).to have_received(:digital_write).with(13, Board::LOW).twice
         end
       end
 

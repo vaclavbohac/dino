@@ -7,20 +7,21 @@ module Dino
         it 'should raise if it does not receive a pin' do
           expect {
             Button.new(board: 'a board')
-          }.to raise_exception /board and pin or pins are required for a component/
+          }.to raise_exception(/board and pin or pins are required for a component/)
         end
 
         it 'should raise if it does not receive a board' do
           expect {
             Button.new(pin: 'a pin')
-          }.to raise_exception /board and pin or pins are required for a component/
+          }.to raise_exception(/board and pin or pins are required for a component/)
         end
 
         it 'should add itself to the board and start reading' do
-          board = double(:board)
-          board.should_receive(:add_digital_hardware)
-          board.should_receive(:start_read)
+          board = double(:board, add_digital_hardware: nil, start_read: nil)
           Button.new(board: board, pin: 'a pin')
+
+          expect(board).to have_received(:add_digital_hardware)
+          expect(board).to have_received(:start_read)
         end
       end
 
@@ -29,89 +30,95 @@ module Dino
         let(:button) {Button.new(board: board, pin: double)}
         describe '#down' do
           it 'should add a callback to the down_callbacks array' do
-            callback = double
-            button.down do 
+            callback = double(called: nil)
+            button.down do
               callback.called
             end
             down_callbacks = button.instance_variable_get(:@down_callbacks)
-            down_callbacks.size.should == 1
-            callback.should_receive(:called)
+            expect(down_callbacks.size).to eql(1)
             down_callbacks.first.call
+
+            expect(callback).to have_received(:called)
           end
         end
 
         describe '#up' do
           it 'should add a callback to the up_callbacks array' do
-            callback = double
+            callback = double(called: nil)
             button.up do 
               callback.called
             end
             up_callbacks = button.instance_variable_get(:@up_callbacks)
-            up_callbacks.size.should == 1
-            callback.should_receive(:called)
+            expect(up_callbacks.size).to eql(1)
             up_callbacks.first.call
+
+            expect(callback).to have_received(:called)
           end
         end
 
         describe '#update' do
           it 'should call the down callbacks' do
-            callback_1 = double
+            callback_1 = double(called: nil)
             button.down do 
               callback_1.called
             end
             
-            callback_2 = double
+            callback_2 = double(called: nil)
             button.down do 
               callback_2.called
             end
-            callback_1.should_receive(:called)
-            callback_2.should_receive(:called)
+
             button.update(Button::DOWN)
+
+            expect(callback_1).to have_received(:called)
+            expect(callback_2).to have_received(:called)
           end
 
           it 'should call the up callbacks' do
-            callback_1 = double
-            button.up do 
+            callback_1 = double(called: nil)
+            button.up do
               callback_1.called
             end
             
-            callback_2 = double
+            callback_2 = double(called: nil)
             button.up do 
               callback_2.called
             end
 
             button.instance_variable_set(:@state, Button::DOWN)
-
-            callback_1.should_receive(:called)
-            callback_2.should_receive(:called)
             button.update(Button::UP)
+
+            expect(callback_1).to have_received(:called)
+            expect(callback_2).to have_received(:called)
           end
 
           it 'should not call the callbacks if the state has not changed' do
-            callback = double
+            callback = double(called: nil)
             button.up do
               callback.called
             end
 
-            callback.should_not_receive(:called)
             button.update(Button::UP)
             button.update(Button::UP)
+
+            expect(callback).to_not have_received(:called)
           end
 
           it 'should not call the callbacks if the data is not UP or DOWN' do
-            callback_1 = double
+            callback_1 = double(called: nil)
             button.up do 
               callback_1.called
             end
 
-            callback_2 = double
+            callback_2 = double(called: nil)
             button.down do 
               callback_2.called
             end
 
-            callback_1.should_not_receive(:called)
-            callback_2.should_not_receive(:called)
             button.update('foobarred')
+
+            expect(callback_1).to_not have_received(:called)
+            expect(callback_2).to_not have_received(:called)
           end
         end
       end
