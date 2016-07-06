@@ -12,15 +12,20 @@ module Dino
       end
 
       def step_cc
-        digital_write(self.pins[:direction], Board::HIGH)
-        digital_write(self.pins[:step],      Board::HIGH)
-        digital_write(self.pins[:step],      Board::LOW)
+        step(Board::HIGH, Board::HIGH, Board::LOW)
       end
 
       def step_cw
-        digital_write(self.pins[:direction], Board::LOW)
-        digital_write(self.pins[:step],      Board::HIGH)
-        digital_write(self.pins[:step],      Board::LOW)
+        step(Board::LOW, Board::HIGH, Board::LOW)
+      end
+
+      private
+
+      def step(direction, *steps)
+        digital_write(self.pins[:direction], direction)
+        steps.each do |step|
+            digital_write(self.pins[:step], step)
+        end
       end
     end
   end
