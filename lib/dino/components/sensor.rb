@@ -3,7 +3,7 @@ module Dino
     class Sensor < BaseComponent
       attr_reader :value
 
-      def after_initialize(options={})
+      def after_initialize
         @data_callbacks = []
         @value = 0
         @board.add_analog_hardware(self)

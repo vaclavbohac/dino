@@ -1,7 +1,7 @@
 module Dino
   module Components
     class Led < BaseComponent
-      def after_initialize(options={})
+      def after_initialize
         set_pin_mode(:out)
         off
       end
