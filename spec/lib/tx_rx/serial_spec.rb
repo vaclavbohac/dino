@@ -6,13 +6,13 @@ module Dino
 
     describe '#initialize' do
       it 'should set first_write to true' do
-        TxRx::Serial.new.instance_variable_get(:@first_write).should == true
+        expect(TxRx::Serial.new.instance_variable_get(:@first_write)).to eql(true)
       end
 
       it 'should set the device and buad if specified' do
         txrx = TxRx::Serial.new({device: "/dev/ttyACM0", baud: 9600})
-        txrx.instance_variable_get(:@baud).should == 9600
-        txrx.instance_variable_get(:@device).should == "/dev/ttyACM0"
+        expect(txrx.instance_variable_get(:@baud)).to eql(9600)
+        expect(txrx.instance_variable_get(:@device)).to eql('/dev/ttyACM0')
       end
     end
 
@@ -21,69 +21,69 @@ module Dino
         it 'should instantiate a new SerialPort for the first available tty device' do
           original_platform = RUBY_PLATFORM
           Constants.redefine(:RUBY_PLATFORM, "mswin", :on => Object)
-          subject.should_receive(:tty_devices).and_return(["COM1", "COM2", "COM3"])
+          expect(subject).to receive(:tty_devices).and_return(['COM1', 'COM2', 'COM3'])
 
           # COM2 is chosen as available for this test.
-          SerialPort.should_receive(:new).with("COM1", TxRx::Serial::BAUD).and_raise
-          SerialPort.should_receive(:new).with("COM2", TxRx::Serial::BAUD).and_return(mock_serial = double)
-          SerialPort.should_not_receive(:new).with("COM3", TxRx::Serial::BAUD)
+          expect(SerialPort).to receive(:new).with('COM1', TxRx::Serial::BAUD).and_raise
+          expect(SerialPort).to receive(:new).with('COM2', TxRx::Serial::BAUD).and_return(mock_serial = double)
+          expect(SerialPort).to_not receive(:new).with('COM3', TxRx::Serial::BAUD)
 
-          subject.io.should == mock_serial
+          expect(subject.io).to eql(mock_serial)
           Constants.redefine(:RUBY_PLATFORM, original_platform, :on => Object)
         end
       end
 
       context "on unix" do
         it 'should instantiate a new SerialPort for the first available tty device' do
-          subject.should_receive(:tty_devices).and_return(['/dev/ttyACM0', '/dev/tty.usbmodem1'])
+          expect(subject).to receive(:tty_devices).and_return(['/dev/ttyACM0', '/dev/tty.usbmodem1'])
 
           # /dev/ttyACM0 is chosen as available for this test.
-          SerialPort.should_receive(:new).with('/dev/ttyACM0', TxRx::Serial::BAUD).and_return(mock_serial = double)
-          SerialPort.should_not_receive(:new).with('/dev/tty.usbmodem1', TxRx::Serial::BAUD)
+          expect(SerialPort).to receive(:new).with('/dev/ttyACM0', TxRx::Serial::BAUD).and_return(mock_serial = double)
+          expect(SerialPort).to_not receive(:new).with('/dev/tty.usbmodem1', TxRx::Serial::BAUD)
 
-          subject.io.should == mock_serial
+          expect(subject.io).to eql(mock_serial)
         end
       end
 
       it 'should connect to the specified device at the specified baud rate' do
-        subject.should_receive(:tty_devices).and_return(["/dev/ttyACM0"])
-        SerialPort.should_receive(:new).with('/dev/ttyACM0', 9600).and_return(mock_serial = double)
+        expect(subject).to receive(:tty_devices).and_return(['/dev/ttyACM0'])
+        expect(SerialPort).to receive(:new).with('/dev/ttyACM0', 9600).and_return(mock_serial = double)
 
         subject.instance_variable_set(:@device, "/dev/ttyACM0")
         subject.instance_variable_set(:@baud, 9600)
 
-        subject.io.should == mock_serial
+        expect(subject.io).to eql(mock_serial)
       end
 
       it 'should use the existing io instance if set' do
-        subject.should_receive(:tty_devices).once.and_return(['/dev/tty.ACM0', '/dev/tty.usbmodem1'])
-        SerialPort.stub(:new).and_return(mock_serial = double)
+        expect(subject).to receive(:tty_devices).once.and_return(['/dev/tty.ACM0', '/dev/tty.usbmodem1'])
+        expect(SerialPort).to receive(:new).and_return(mock_serial = double)
 
         3.times { subject.io }
-        subject.io.should == mock_serial
+        expect(subject.io).to eql(mock_serial)
       end
 
       it 'should raise a BoardNotFound exception if there is no board connected' do
-        SerialPort.stub(:new).and_raise
+        allow(SerialPort).to receive(:new).and_raise
         expect { subject.io }.to raise_exception BoardNotFound
       end
     end
 
     describe '#read' do
       it 'should create a new thread' do
-        Thread.should_receive :new
+        expect(Thread).to receive(:new)
         subject.read
       end
 
       it 'should get messages from the device' do
-        subject.stub(:io).and_return(mock_serial = double)
+        expect(subject).to receive(:io).and_return(mock_serial = double).twice
 
-        IO.should_receive(:select).and_return(true)
-        Thread.should_receive(:new).and_yield
-        subject.should_receive(:loop).and_yield
-        mock_serial.should_receive(:gets).and_return("02:00\n")
-        subject.should_receive(:changed).and_return(true)
-        subject.should_receive(:notify_observers).with('02','00')
+        expect(IO).to receive(:select).and_return(true)
+        expect(Thread).to receive(:new).and_yield
+        expect(subject).to receive(:loop).and_yield
+        expect(mock_serial).to receive(:gets).and_return("02:00\n")
+        expect(subject).to receive(:changed).and_return(true)
+        expect(subject).to receive(:notify_observers).with('02', '00')
 
         subject.read
       end
@@ -92,7 +92,7 @@ module Dino
     describe '#close_read' do
       it 'should kill the reading thread' do
         subject.instance_variable_set(:@thread, mock_thread = double)
-        Thread.should_receive(:kill).with(mock_thread)
+        expect(Thread).to receive(:kill).with(mock_thread)
         subject.read
         subject.close_read
       end
@@ -100,10 +100,10 @@ module Dino
 
     describe '#write' do
       it 'should write to the device' do
-        IO.should_receive(:select).and_return(true)
+        allow(IO).to receive(:select).and_return(true)
+        allow(subject).to receive(:io).and_return(mock_serial = double)
 
-        subject.stub(:io).and_return(mock_serial = double)
-        mock_serial.should_receive(:syswrite).with('a message')
+        expect(mock_serial).to receive(:syswrite).with('a message')
         subject.write('a message')
       end
     end

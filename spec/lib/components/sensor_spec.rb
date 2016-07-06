@@ -10,38 +10,37 @@ module Dino
         it 'should raise if it does not receive a pin' do
           expect {
             Sensor.new(board: 'a board')
-          }.to raise_exception /board and pin or pins are required for a component/
+          }.to raise_exception(/board and pin or pins are required for a component/)
         end
 
         it 'should raise if it does not receive a board' do
           expect {
             Sensor.new(pin: 'a pin')
-          }.to raise_exception /board and pin or pins are required for a component/
+          }.to raise_exception(/board and pin or pins are required for a component/)
         end
 
         it 'should add itself to the board and start reading' do
-          board.should_receive(:add_analog_hardware)
-          board.should_receive(:start_read)
           Sensor.new(board: board, pin: 'a pin')
+          expect(board).to have_received(:add_analog_hardware)
+          expect(board).to have_received(:start_read)
         end
 
         it 'should initalize data_callbacks' do
           sensor = Sensor.new(board: board, pin: 'a pin')
-          sensor.instance_variable_get(:@data_callbacks).should == []
+          expect(sensor.instance_variable_get(:@data_callbacks)).to eql([])
         end
 
         it 'should initialize value' do
           sensor = Sensor.new(board: board, pin: 'a pin')
-          sensor.value.should == 0
+          expect(sensor.value).to eql(0)
         end
       end
 
       describe '#when_data_received' do
-
         it "should add a callback to the list of callbacks" do
           sensor = Sensor.new(board: board, pin: 'a pin')
           sensor.when_data_received { "this is a block" }
-          sensor.instance_variable_get(:@data_callbacks).should_not be_empty
+          expect(sensor.instance_variable_get(:@data_callbacks)).to_not be_empty
         end
       end
 
@@ -59,14 +58,16 @@ module Dino
           end
 
           sensor.update('Some data')
-          [first_block_data, second_block_data].each { |block_data| block_data.should == "Some data" }
+          [first_block_data, second_block_data].each do |block_data|
+            expect(block_data).to eql('Some data')
+          end
         end
 
         it 'should update the value' do
           sensor = Sensor.new(board: board, pin: 'a pin')
 
           sensor.update('Some data')
-          sensor.value.should == 'Some data'
+          expect(sensor.value).to eql('Some data')
         end
       end
     end

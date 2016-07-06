@@ -10,8 +10,8 @@ module Dino
         board = "a board"
         component = BaseComponent.new(pin: pin, board: board)
 
-        component.pin.should == pin
-        component.board.should == board
+        expect(component.pin).to eql(pin)
+        expect(component.board).to eql(board)
       end
 
       it 'should assign pins' do
@@ -19,7 +19,7 @@ module Dino
         board = "a board"
         component = BaseComponent.new(pins: pins, board: board)
 
-        component.pins.should == pins
+        expect(component.pins).to eql(pins)
       end
 
       it 'should require a pin or pins' do
@@ -38,7 +38,7 @@ module Dino
 
         class SpecComponent < BaseComponent
 
-          def sucessfully_initialized? ; @success ; end
+          def successfully_initialized? ; @success ; end
 
           def options ; @options ; end
 
@@ -54,8 +54,8 @@ module Dino
 
         it "should call #after_initialize with options" do
           component = SpecComponent.new(options)
-          component.should be_sucessfully_initialized
-          component.options.should eq options
+          expect(component).to be_successfully_initialized
+          expect(component.options).to eql(options)
         end
 
       end

@@ -1,5 +1,9 @@
 require 'spec_helper'
 
+RSpec.configure do |c|
+  c.raise_errors_for_deprecations!
+end
+
 module Dino
   module Components
     describe Servo do
@@ -9,47 +13,47 @@ module Dino
         it 'should raise if it does not receive a pin' do
           expect {
             Servo.new(board: board)
-          }.to raise_exception /board and pin or pins are required for a component/
+          }.to raise_exception(/board and pin or pins are required for a component/)
         end
 
         it 'should raise if it does not receive a board' do
           expect {
             Servo.new(pin: 13)
-          }.to raise_exception /board and pin or pins are required for a component/
+          }.to raise_exception(/board and pin or pins are required for a component/)
         end
 
         it 'should set the pins to out' do
-          board.should_receive(:set_pin_mode).with(13, :out, nil)
           Servo.new(pin: 13, board: board)
+          expect(board).to have_received(:set_pin_mode).with(13, :out, nil)
         end
 
         it 'should set the inital position to 0' do
           servo =  Servo.new(pin: 13, board: board)
-          servo.instance_variable_get(:@position).should == 0
+          expect(servo.instance_variable_get(:@position)).to eql(0)
         end
       end
 
       describe '#position' do
-        let(:servo) {servo =  Servo.new(pin: 13, board: board)}
+        let(:servo) { Servo.new(pin: 13, board: board) }
 
         it 'should set the position of the Servo' do
           servo.position = 90
-          servo.instance_variable_get(:@position).should == 90
+          expect(servo.instance_variable_get(:@position)).to eql(90)
         end
 
         it 'should let you write up to 180' do
           servo.position = 180
-          servo.instance_variable_get(:@position).should == 180
+          expect(servo.instance_variable_get(:@position)).to eql(180)
         end
 
         it 'should modulate when position > 180' do
           servo.position = 190
-          servo.instance_variable_get(:@position).should == 10
+          expect(servo.instance_variable_get(:@position)).to eql(10)
         end
 
         it 'should write the new position to the board' do
-          board.should_receive(:servo_write).with(13, 10)
           servo.position = 190
+          expect(board).to have_received(:servo_write).with(13, 10)
         end
       end
     end

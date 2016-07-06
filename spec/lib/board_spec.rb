@@ -3,7 +3,16 @@ require 'spec_helper'
 module Dino
   describe Dino::Board do
     def io_mock(methods = {})
-      @io ||= double(:io, {write: nil, add_observer: nil, flush_read: nil, handshake: "14"}.merge(methods))
+      props = {
+          write: nil,
+          add_observer: nil,
+          close_read: nil,
+          flush_read: nil,
+          read: nil,
+          handshake: '14'
+      }.merge(methods)
+
+      @io ||= double(:io, props)
     end
 
     subject { Board.new(io_mock) }
@@ -20,35 +29,35 @@ module Dino
       end
 
       it 'should initiate the handshake' do
-        io_mock.should_receive(:handshake)
         subject
+
+        expect(io_mock).to have_received(:handshake)
       end
     end
 
     describe '#update' do
       context 'when the given pin connects to an analog hardware part' do
         it 'should call update with the message on the part' do
-          part = double(:part, pin: 7)
+          part = double(:part, pin: 7, update: nil)
           subject.add_analog_hardware(part)
-          other_part = double(:part, pin: 9)
+          other_part = double(:part, pin: 9, update: nil)
           subject.add_analog_hardware(other_part)
 
-          part.should_receive(:update).with('wake up!')
           subject.update(7, 'wake up!')
+          expect(part).to have_received(:update).with('wake up!')
         end
       end
 
       context 'when the given pin connects to an digital hardware part' do
         it 'should call update with the message on the part' do
-          part = double(:part, pin: 5, pullup: nil)
+          part = double(:part, pin: 5, pullup: nil, update: nil)
           subject.add_digital_hardware(part)
-          other_part = double(:part, pin: 11, pullup: nil)
+          other_part = double(:part, pin: 11, pullup: nil, update: nil)
           subject.add_digital_hardware(other_part)
 
-          part.should_receive(:update).with('wake up!')
-          other_part.should_not_receive(:update).with('wake up!')
-
           subject.update(5, 'wake up!')
+          expect(part).to have_received(:update).with('wake up!')
+          expect(other_part).to_not have_received(:update).with('wake up!')
         end
       end
 
@@ -63,13 +72,13 @@ module Dino
 
     describe '#digital_hardware' do
       it 'should initialize as empty' do
-        subject.digital_hardware.should == []
+        expect(subject.digital_hardware).to eql([])
       end
     end
 
     describe '#analog_hardware' do
       it 'should initialize as empty' do
-        subject.analog_hardware.should == []
+        expect(subject.analog_hardware).to eql([])
       end
     end
 
@@ -77,15 +86,15 @@ module Dino
       it 'should add digital hardware to the board' do
         subject.add_digital_hardware(mock1 = double(:part1, pin: 12, pullup: nil))
         subject.add_digital_hardware(mock2 = double(:part2, pin: 14, pullup: nil))
-        subject.digital_hardware.should =~ [mock1, mock2]
+        expect(subject.digital_hardware).to eq([mock1, mock2])
       end
 
       it 'should set the mode for the given pin to "in" and add a digital listener' do
-        subject
-        subject.should_receive(:write).with("0012001")
-        subject.should_receive(:write).with("0112000")
-        subject.should_receive(:write).with("0512000")
-        subject.add_digital_hardware(mock1 = double(:part1, pin: 12, pullup: nil))
+        subject.add_digital_hardware(mock1 = double(:part1, pin: 12, pullup: nil, write: nil))
+
+        expect(io_mock).to have_received(:write).with('!0012001.')
+        expect(io_mock).to have_received(:write).with('!0112000.')
+        expect(io_mock).to have_received(:write).with('!0512000.')
       end
     end
 
@@ -94,7 +103,7 @@ module Dino
         double = double(:part1, pin: 12, pullup: nil)
         subject.add_digital_hardware(double)
         subject.remove_digital_hardware(double)
-        subject.digital_hardware.should == []
+        expect(subject.digital_hardware).to eq([])
       end
     end
 
@@ -102,15 +111,15 @@ module Dino
       it 'should add analog hardware to the board' do
         subject.add_analog_hardware(mock1 = double(:part1, pin: 12, pullup: nil))
         subject.add_analog_hardware(mock2 = double(:part2, pin: 14, pullup: nil))
-        subject.analog_hardware.should =~ [mock1, mock2]
+        expect(subject.analog_hardware).to eq([mock1, mock2])
       end
 
       it 'should set the mode for the given pin to "in" and add an analog listener' do
-        subject
-        subject.should_receive(:write).with("0012001")
-        subject.should_receive(:write).with("0112000")
-        subject.should_receive(:write).with("0612000")
         subject.add_analog_hardware(mock1 = double(:part1, pin: 12, pullup: nil))
+
+        expect(io_mock).to have_received(:write).with('!0012001.')
+        expect(io_mock).to have_received(:write).with('!0112000.')
+        expect(io_mock).to have_received(:write).with('!0612000.')
       end
     end
 
@@ -119,21 +128,23 @@ module Dino
         double = double(:part1, pin: 12, pullup: nil)
         subject.add_analog_hardware(double)
         subject.remove_analog_hardware(double)
-        subject.analog_hardware.should == []
+        expect(subject.analog_hardware).to eq([])
       end
     end
 
     describe '#start_read' do
       it 'should tell the io to read' do
-        io_mock.should_receive(:read)
-        Board.new(io_mock).start_read
+        subject.start_read
+
+        expect(io_mock).to have_received(:read)
       end
     end
 
     describe '#stop_read' do
       it 'should tell the io to read' do
-        io_mock.should_receive(:close_read)
-        Board.new(io_mock).stop_read
+        subject.stop_read
+
+        expect(io_mock).to have_received(:close_read)
       end
     end
 
@@ -141,96 +152,107 @@ module Dino
       it 'should return true if the write succeeds' do
         @io = nil
         board = Board.new(io_mock(write: true))
-        board.write('message').should == true
+        expect(board.write('message')).to eq(true)
       end
 
       it 'should wrap the message in a ! and a . by default' do
-        io_mock.should_receive(:write).with('!hello.')
         subject.write('hello')
+
+        expect(io_mock).to have_received(:write).with('!hello.')
       end
 
       it 'should not wrap the message if no_wrap is set to true' do
-        board = Board.new(io_mock)
-        io_mock.should_receive(:write).with('hello')
-        board.write('hello', no_wrap: true)
+        subject.write('hello', no_wrap: true)
+
+        expect(io_mock).to have_received(:write).with('hello')
       end
     end
 
     describe '#digital_write' do
       it 'should append a append a write to the pin and value' do
-        io_mock.should_receive(:write).with('!0101003.')
         subject.digital_write(01, 003)
+
+        expect(io_mock).to have_received(:write).with('!0101003.')
       end
     end
 
     describe '#digital_read' do
       it 'should tell the board to read once from the given pin' do
-        io_mock.should_receive(:write).with('!0213000.')
         subject.digital_read(13)
+
+        expect(io_mock).to have_received(:write).with('!0213000.')
       end
     end
 
     describe '#analog_write' do
       it 'should append a append a write to the pin and value' do
-        io_mock.should_receive(:write).with('!0301003.')
         subject.analog_write(01, 003)
+
+        expect(io_mock).to have_received(:write).with('!0301003.')
       end
     end
 
     describe '#analog_read' do
       it 'should tell the board to read once from the given pin' do
-        io_mock.should_receive(:write).with('!0413000.')
         subject.analog_read(13)
+
+        expect(io_mock).to have_received(:write).with('!0413000.')
       end
     end
 
     describe '#digital_listen' do
       it 'should tell the board to continuously read from the given pin' do
-        io_mock.should_receive(:write).with('!0513000.')
         subject.digital_listen(13)
+
+        expect(io_mock).to have_received(:write).with('!0513000.')
       end
     end
 
     describe '#analog_listen' do
       it 'should tell the board to continuously read from the given pin' do
-        io_mock.should_receive(:write).with('!0613000.')
         subject.analog_listen(13)
+
+        expect(io_mock).to have_received(:write).with('!0613000.')
       end
     end
 
     describe '#stop_listener' do
       it 'should tell the board to stop sending values for the given pin' do
-        io_mock.should_receive(:write).with('!0713000.')
         subject.stop_listener(13)
+
+        expect(io_mock).to have_received(:write).with('!0713000.')
       end
     end
 
     describe '#set_pin_mode' do
       it 'should send a value of 0 if the pin mode is set to out' do
-        io_mock.should_receive(:write).with('!0013000.')
         subject.set_pin_mode(13, :out)
+
+        expect(io_mock).to have_received(:write).with('!0013000.')
       end
 
       it 'should send a value of 1 if the pin mode is set to in' do
-        io_mock.should_receive(:write).with('!0013001.')
         subject.set_pin_mode(13, :in)
+
+        expect(io_mock).to have_received(:write).with('!0013001.')
       end
     end
 
     describe '#handshake' do
       it 'should tell the board to reset to defaults' do
-        io_mock.should_receive(:handshake)
         subject.handshake
+
+        expect(io_mock).to have_received(:handshake).twice
       end
     end
 
     describe '#normalize_pin' do
       it 'should normalize numbers so they are two digits' do
-        subject.normalize_pin(1).should == '01'
+        expect(subject.normalize_pin(1)).to eq('01')
       end
 
       it 'should not normalize numbers that are already two digits' do
-        subject.normalize_pin(10).should == '10'
+        expect(subject.normalize_pin(10)).to eq('10')
       end
 
       it 'should raise if a number larger than two digits are given' do
@@ -240,11 +262,11 @@ module Dino
 
     describe '#normalize_value' do
       it 'should normalize numbers so they are three digits' do
-        subject.normalize_value(1).should == '001'
+        expect(subject.normalize_value(1)).to eql('001')
       end
 
       it 'should not normalize numbers that are already three digits' do
-        subject.normalize_value(10).should == '010'
+        expect(subject.normalize_value(10)).to eql('010')
       end
 
       it 'should raise if a number larger than three digits are given' do
