@@ -7,7 +7,7 @@ module Dino
         raise 'missing pins[:green] pin' unless self.pins[:green]
         raise 'missing pins[:blue] pin' unless self.pins[:blue]
 
-        pins.each do |color, pin|
+        pins.each do |_, pin|
           set_pin_mode(pin, :out)
           analog_write(pin, Board::LOW)
         end
