@@ -1,9 +1,5 @@
 require 'spec_helper'
 
-RSpec.configure do |c|
-  c.raise_errors_for_deprecations!
-end
-
 module Dino
   module Components
     describe Servo do
