@@ -96,7 +96,7 @@ module Dino
     end
 
     def normalize_pin(pin)
-      if pin.to_s.match /\Aa/i
+      if pin.to_s.match(/\Aa/i)
         int_pin = @analog_zero + pin.to_s.gsub(/\Aa/i, '').to_i
       else
         int_pin = pin

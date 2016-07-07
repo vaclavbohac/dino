@@ -3,7 +3,7 @@ module Dino
     class IrReceiver < BaseComponent
       STABLE = "01"
 
-      def after_initialize(options={})
+      def after_initialize()
         @flash_callbacks = []
 
         self.board.add_digital_hardware(self)

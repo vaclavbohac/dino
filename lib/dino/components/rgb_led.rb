@@ -2,12 +2,12 @@ module Dino
   module Components
     class RgbLed < BaseComponent
       # options = {board: my_board, pins: {red: red_pin, green: green_pin, blue: blue_pin}
-      def after_initialize(options={})
+      def after_initialize(*)
         raise 'missing pins[:red] pin' unless self.pins[:red]
         raise 'missing pins[:green] pin' unless self.pins[:green]
         raise 'missing pins[:blue] pin' unless self.pins[:blue]
 
-        pins.each do |color, pin|
+        pins.each do |_, pin|
           set_pin_mode(pin, :out)
           analog_write(pin, Board::LOW)
         end
